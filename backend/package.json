@@ -1,0 +1,6 @@
+{
+  "name": "trafiklab-departure-board-backend",
+  "version": "1.0.0",
+  "description": "Lambda functions for Stockholm Departure Board",
+  "private": true
+}
