@@ -139,9 +139,9 @@
 
     .departure .time .minutes-left {
       display: block;
-      font-size: 0.8rem;
+      font-size: 1rem;
       color: #4ecca3;
-      font-weight: 400;
+      font-weight: 700;
     }
 
     .departure .deviations {
@@ -340,8 +340,8 @@
                 <div class="line">${d.line}</div>
                 <div class="dest">${d.destination}</div>
                 <div class="time">
-                  ${d.displayTime}
                   ${(() => { const ml = minutesLeft(d.expected); return ml ? `<span class="minutes-left">${ml}</span>` : ''; })()}
+                  ${d.displayTime}
                 </div>
                 ${d.deviations?.length ? `<div class="deviations">${d.deviations.join(', ')}</div>` : ''}
               </div>
