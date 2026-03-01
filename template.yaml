@@ -5,7 +5,7 @@ Description: Stockholm Departure Board - Trafiklab SL Transport API
 Globals:
   Function:
     Timeout: 10
-    Runtime: nodejs20.x
+    Runtime: python3.12
     MemorySize: 128
   Api:
     Cors:
@@ -23,7 +23,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: backend/
-      Handler: index.searchSites
+      Handler: handler.search_sites
       Events:
         SearchSites:
           Type: Api
@@ -36,7 +36,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: backend/
-      Handler: index.getDepartures
+      Handler: handler.get_departures
       Events:
         GetDepartures:
           Type: Api
