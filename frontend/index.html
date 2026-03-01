@@ -319,6 +319,12 @@
       return `${diff} min`;
     }
 
+    function clockTime(expected) {
+      if (!expected) return null;
+      const d = new Date(expected);
+      return d.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+    }
+
     // ---- RENDER DEPARTURES ----
     async function loadDepartures() {
       const container = document.getElementById('departures');
@@ -341,7 +347,7 @@
                 <div class="dest">${d.destination}</div>
                 <div class="time">
                   ${(() => { const ml = minutesLeft(d.expected); return ml ? `<span class="minutes-left">${ml}</span>` : ''; })()}
-                  ${d.displayTime}
+                  ${clockTime(d.expected) || d.displayTime}
                 </div>
                 ${d.deviations?.length ? `<div class="deviations">${d.deviations.join(', ')}</div>` : ''}
               </div>
