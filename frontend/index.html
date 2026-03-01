@@ -182,6 +182,7 @@
 
     // ---- STATE ----
     let selectedSiteId = null;
+    let selectedDestFilter = null;
     let refreshTimer = null;
     let searchTimer = null;
 
@@ -199,11 +200,11 @@
       return res.json();
     }
 
-    async function fetchDepartures(siteId) {
+    async function fetchDepartures(siteId, destination) {
       if (directMode) {
         const res = await fetch(`https://transport.integration.sl.se/v1/sites/${siteId}/departures`);
         const data = await res.json();
-        return (data.departures || []).slice(0, 30).map(d => ({
+        let deps = (data.departures || []).map(d => ({
           line: d.line?.designation || '',
           destination: d.destination || '',
           displayTime: d.display || '',
@@ -211,8 +212,15 @@
           transportMode: d.line?.transport_mode || '',
           deviations: (d.deviations || []).map(dev => dev.message),
         }));
+        if (destination) {
+          const filter = destination.toLowerCase();
+          deps = deps.filter(d => d.destination.toLowerCase().includes(filter));
+        }
+        return deps.slice(0, 30);
       }
-      const res = await fetch(`${API_BASE}/api/sites/${siteId}/departures`);
+      let url = `${API_BASE}/api/sites/${siteId}/departures`;
+      if (destination) url += `?destination=${encodeURIComponent(destination)}`;
+      const res = await fetch(url);
       const data = await res.json();
       return data.departures || [];
     }
@@ -264,20 +272,22 @@
         // Försök hitta Kolarängen dynamiskt, annars använd hårdkodat ID
         const sites = await fetchSites('Kolarängen');
         const site = sites.find(s => s.name.toLowerCase().includes('kolarängen')) || { id: DEFAULT_SITE_ID, name: DEFAULT_SITE_NAME };
-        selectStop(site.id, site.name);
+        selectStop(site.id, site.name, 'Slussen');
       } catch {
-        selectStop(DEFAULT_SITE_ID, DEFAULT_SITE_NAME);
+        selectStop(DEFAULT_SITE_ID, DEFAULT_SITE_NAME, 'Slussen');
       }
     }
 
     loadDefault();
 
     // ---- SELECT / CLEAR STOP ----
-    function selectStop(id, name) {
+    function selectStop(id, name, destination) {
       selectedSiteId = id;
+      selectedDestFilter = destination || null;
       suggestionsEl.classList.remove('visible');
       searchInput.value = '';
-      document.getElementById('stop-name').textContent = name;
+      const label = destination ? `${name} → ${destination}` : name;
+      document.getElementById('stop-name').textContent = label;
       document.getElementById('selected-stop').classList.add('visible');
       loadDepartures();
       // Auto-refresh every 30s
@@ -287,6 +297,7 @@
 
     function clearStop() {
       selectedSiteId = null;
+      selectedDestFilter = null;
       clearInterval(refreshTimer);
       document.getElementById('selected-stop').classList.remove('visible');
       document.getElementById('departures').innerHTML = '';
@@ -300,7 +311,7 @@
       container.innerHTML = '<div class="status">Laddar avgångar...</div>';
 
       try {
-        const departures = await fetchDepartures(selectedSiteId);
+        const departures = await fetchDepartures(selectedSiteId, selectedDestFilter);
         if (!departures.length) {
           container.innerHTML = '<div class="status">Inga avgångar just nu</div>';
           return;

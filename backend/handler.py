@@ -48,10 +48,16 @@ def get_departures(event, context):
     if not site_id:
         return _respond(400, {"error": "Missing siteId"})
 
+    params = event.get("queryStringParameters") or {}
+    dest_filter = params.get("destination", "").lower()
+
     try:
         data = _fetch_json(f"{SL_BASE}/sites/{site_id}/departures")
-        departures = [
-            {
+        departures = []
+        for d in data.get("departures") or []:
+            if dest_filter and dest_filter not in d.get("destination", "").lower():
+                continue
+            departures.append({
                 "line": d.get("line", {}).get("designation", ""),
                 "destination": d.get("destination", ""),
                 "direction": d.get("direction"),
@@ -59,9 +65,9 @@ def get_departures(event, context):
                 "expected": d.get("expected") or d.get("scheduled", ""),
                 "transportMode": d.get("line", {}).get("transport_mode", ""),
                 "deviations": [dev.get("message", "") for dev in d.get("deviations", [])],
-            }
-            for d in (data.get("departures") or [])[:30]
-        ]
+            })
+            if len(departures) >= 30:
+                break
         return _respond(200, {"siteId": site_id, "departures": departures})
     except Exception as e:
         print(f"getDepartures error: {e}")
