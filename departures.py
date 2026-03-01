@@ -10,6 +10,7 @@ Användning:
 """
 
 import json
+import ssl
 import sys
 import time
 import urllib.request
@@ -19,10 +20,33 @@ from datetime import datetime
 SL_API_BASE = "https://transport.integration.sl.se/v1"
 
 
+def _ssl_context():
+    """Skapa SSL-kontext, med certifi som fallback för macOS."""
+    try:
+        ctx = ssl.create_default_context()
+        # Testa att kontexten fungerar genom att ladda standardcertifikat
+        if not ctx.get_ca_certs():
+            raise ssl.SSLError("no certs loaded")
+        return ctx
+    except Exception:
+        pass
+    try:
+        import certifi
+        return ssl.create_default_context(cafile=certifi.where())
+    except ImportError:
+        pass
+    # Sista utväg: använd systemets certifikat utan extra validering
+    ctx = ssl.create_default_context()
+    return ctx
+
+
+_ctx = _ssl_context()
+
+
 def fetch_json(url):
     """Hämta JSON från en URL."""
     req = urllib.request.Request(url)
-    with urllib.request.urlopen(req, timeout=10) as resp:
+    with urllib.request.urlopen(req, timeout=10, context=_ctx) as resp:
         return json.loads(resp.read())
 
 
