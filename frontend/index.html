@@ -131,10 +131,15 @@
     .departure .dest { font-size: 0.95rem; }
 
     .departure .time {
-      font-weight: 600;
-      font-size: 1rem;
       text-align: right;
       white-space: nowrap;
+    }
+
+    .departure .time .mins {
+      display: block;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #eee;
     }
 
     .departure .time .clock {
@@ -346,8 +351,8 @@
                 <div class="line">${d.line}</div>
                 <div class="dest">${d.destination}</div>
                 <div class="time">
-                  ${minutesLeft(d.expected) || d.displayTime}
-                  ${(() => { const ct = clockTime(d.expected); return ct ? `<span class="clock">${ct}</span>` : ''; })()}
+                  <span class="mins">${minutesLeft(d.expected) || d.displayTime}</span>
+                  <span class="clock">${clockTime(d.expected) || ''}</span>
                 </div>
                 ${d.deviations?.length ? `<div class="deviations">${d.deviations.join(', ')}</div>` : ''}
               </div>
