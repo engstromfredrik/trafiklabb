@@ -137,6 +137,13 @@
       white-space: nowrap;
     }
 
+    .departure .time .minutes-left {
+      display: block;
+      font-size: 0.8rem;
+      color: #4ecca3;
+      font-weight: 400;
+    }
+
     .departure .deviations {
       grid-column: 1 / -1;
       font-size: 0.8rem;
@@ -303,6 +310,15 @@
       document.getElementById('departures').innerHTML = '';
     }
 
+    // ---- HELPERS ----
+    function minutesLeft(expected) {
+      if (!expected) return null;
+      const diff = Math.round((new Date(expected) - new Date()) / 60000);
+      if (diff < 0) return null;
+      if (diff === 0) return 'Nu';
+      return `${diff} min`;
+    }
+
     // ---- RENDER DEPARTURES ----
     async function loadDepartures() {
       const container = document.getElementById('departures');
@@ -323,7 +339,10 @@
               <div class="departure" data-mode="${d.transportMode}">
                 <div class="line">${d.line}</div>
                 <div class="dest">${d.destination}</div>
-                <div class="time">${d.displayTime}</div>
+                <div class="time">
+                  ${d.displayTime}
+                  ${(() => { const ml = minutesLeft(d.expected); return ml ? `<span class="minutes-left">${ml}</span>` : ''; })()}
+                </div>
                 ${d.deviations?.length ? `<div class="deviations">${d.deviations.join(', ')}</div>` : ''}
               </div>
             `).join('')}
