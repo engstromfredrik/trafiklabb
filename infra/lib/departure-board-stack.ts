@@ -6,6 +6,9 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
+import * as acm from 'aws-cdk-lib/aws-certificatemanager';
+import * as route53 from 'aws-cdk-lib/aws-route53';
+import * as targets from 'aws-cdk-lib/aws-route53-targets';
 import * as path from 'path';
 
 export class DepartureBoardStack extends cdk.Stack {
@@ -49,6 +52,18 @@ export class DepartureBoardStack extends cdk.Stack {
     const departuresResource = siteIdResource.addResource('departures');
     departuresResource.addMethod('GET', new apigateway.LambdaIntegration(departuresFunction));
 
+    // --- Custom Domain ---
+    const domainName = 'departures.engstrom.cloud';
+    const hostedZone = route53.HostedZone.fromLookup(this, 'EngstromZone', {
+      domainName: 'engstrom.cloud',
+    });
+
+    const certificate = new acm.DnsValidatedCertificate(this, 'SiteCertificate', {
+      domainName,
+      hostedZone,
+      region: 'us-east-1',
+    });
+
     // --- S3 Bucket for Frontend ---
     const websiteBucket = new s3.Bucket(this, 'FrontendBucket', {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
@@ -63,6 +78,15 @@ export class DepartureBoardStack extends cdk.Stack {
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       },
       defaultRootObject: 'index.html',
+      domainNames: [domainName],
+      certificate,
+    });
+
+    // --- Route 53 Alias Record ---
+    new route53.ARecord(this, 'SiteAliasRecord', {
+      zone: hostedZone,
+      recordName: domainName,
+      target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(distribution)),
     });
 
     // --- Deploy Frontend to S3 ---
