@@ -25,10 +25,9 @@ echo ">> Injecting API URL into frontend..."
 # Step 4: Inject API_BASE config into index.html and re-upload
 FRONTEND_DIR="$SCRIPT_DIR/../frontend"
 TEMP_DIR=$(mktemp -d)
-cp "$FRONTEND_DIR/index.html" "$TEMP_DIR/index.html"
 
-# Inject the APP_CONFIG before the closing </head> tag
-sed -i'' "s|</head>|<script>window.APP_CONFIG = { apiBase: '${API_URL%/}' };</script></head>|" "$TEMP_DIR/index.html"
+# Inject the APP_CONFIG before the closing </head> tag (portable across macOS and Linux)
+sed "s|</head>|<script>window.APP_CONFIG = { apiBase: '${API_URL%/}' };</script></head>|" "$FRONTEND_DIR/index.html" > "$TEMP_DIR/index.html"
 
 # Upload the modified frontend to S3
 aws s3 cp "$TEMP_DIR/index.html" "s3://$BUCKET_NAME/index.html" --content-type "text/html"
