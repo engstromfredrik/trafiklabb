@@ -4,3 +4,11 @@ samconfig.toml
 __pycache__/
 *.pyc
 .venv/
+
+# CDK
+infra/cdk.out/
+infra/node_modules/
+infra/cdk-outputs.json
+*.js
+*.d.ts
+!jest.config.js
