@@ -54,8 +54,9 @@ export class DepartureBoardStack extends cdk.Stack {
 
     // --- Custom Domain ---
     const domainName = 'departures.engstrom.cloud';
-    const hostedZone = route53.HostedZone.fromLookup(this, 'EngstromZone', {
-      domainName: 'engstrom.cloud',
+    const hostedZone = route53.HostedZone.fromHostedZoneAttributes(this, 'EngstromZone', {
+      hostedZoneId: 'Z02189273AOR9DCFLK4K',
+      zoneName: 'engstrom.cloud',
     });
 
     const certificate = new acm.DnsValidatedCertificate(this, 'SiteCertificate', {
