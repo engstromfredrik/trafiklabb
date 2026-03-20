@@ -187,6 +187,11 @@
     // ---- CONFIGURATION ----
     const API_BASE = window.APP_CONFIG?.apiBase;
 
+    if (!API_BASE) {
+      document.getElementById('departures').innerHTML =
+        '<div class="status">Configuration missing — deploy via infra/deploy.sh to inject API URL.</div>';
+    }
+
     // ---- STATE ----
     let selectedSiteId = null;
     let selectedDestFilter = null;
