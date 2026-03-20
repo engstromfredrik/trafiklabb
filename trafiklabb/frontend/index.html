@@ -190,6 +190,7 @@
     if (!API_BASE) {
       document.getElementById('departures').innerHTML =
         '<div class="status">Configuration missing — deploy via infra/deploy.sh to inject API URL.</div>';
+      throw new Error('API_BASE not configured');
     }
 
     // ---- STATE ----
