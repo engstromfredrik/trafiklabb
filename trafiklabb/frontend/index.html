@@ -261,7 +261,18 @@
     const DEFAULT_SITE_ID = 7542;
     const DEFAULT_SITE_NAME = 'Kolarängen (Nacka)';
 
-    selectStop(DEFAULT_SITE_ID, DEFAULT_SITE_NAME, 'Slussen');
+    async function loadDefault() {
+      try {
+        const sites = await fetchSites('Kolarängen');
+        const site = sites.find(s => s.name.toLowerCase().includes('kolarängen'))
+          || { id: DEFAULT_SITE_ID, name: DEFAULT_SITE_NAME };
+        selectStop(site.id, site.name, 'Slussen');
+      } catch {
+        selectStop(DEFAULT_SITE_ID, DEFAULT_SITE_NAME, 'Slussen');
+      }
+    }
+
+    loadDefault();
 
     // ---- SELECT / CLEAR STOP ----
     function selectStop(id, name, destination) {
