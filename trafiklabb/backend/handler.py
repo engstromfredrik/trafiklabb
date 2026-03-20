@@ -31,7 +31,7 @@ def _fetch_json(url):
 
 
 def _fetch_bytes(url):
-    req = urllib.request.Request(url)
+    req = urllib.request.Request(url, headers={'Accept': 'application/x-protobuf'})
     with urllib.request.urlopen(req, timeout=10) as resp:
         return resp.read()
 
