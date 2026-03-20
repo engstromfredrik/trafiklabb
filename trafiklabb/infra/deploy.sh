@@ -10,7 +10,7 @@ echo "=== Stockholm Departure Board - CDK Deploy ==="
 echo ">> Building Lambda layer..."
 LAYER_DIR="$SCRIPT_DIR/../backend/layer/python"
 mkdir -p "$LAYER_DIR"
-pip install gtfs-realtime-bindings -t "$LAYER_DIR" --quiet
+pip3 install gtfs-realtime-bindings -t "$LAYER_DIR" --quiet
 
 # Step 2: Bootstrap CDK (only needed once per account/region)
 echo ">> Bootstrapping CDK (if needed)..."
