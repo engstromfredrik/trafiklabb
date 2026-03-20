@@ -4,6 +4,8 @@ samconfig.toml
 __pycache__/
 *.pyc
 .venv/
+.env
+.env.*
 
 # CDK
 infra/cdk.out/
