@@ -1,9 +1,14 @@
 """Lambda handlers for Stockholm Departure Board."""
 
 import json
+import time
 import urllib.request
 
 SL_BASE = "https://transport.integration.sl.se/v1"
+
+_sites_cache = None
+_sites_cache_time = 0
+CACHE_TTL = 3600  # 1 hour
 
 
 def _respond(status_code, body):
@@ -23,6 +28,15 @@ def _fetch_json(url):
         return json.loads(resp.read())
 
 
+def _get_sites():
+    global _sites_cache, _sites_cache_time
+    now = time.time()
+    if _sites_cache is None or now - _sites_cache_time > CACHE_TTL:
+        _sites_cache = _fetch_json(f"{SL_BASE}/sites?expand=true")
+        _sites_cache_time = now
+    return _sites_cache
+
+
 def search_sites(event, context):
     params = event.get("queryStringParameters") or {}
     query = params.get("q", "")
@@ -30,7 +44,7 @@ def search_sites(event, context):
         return _respond(400, {"error": 'Query parameter "q" must be at least 2 characters'})
 
     try:
-        data = _fetch_json(f"{SL_BASE}/sites?expand=true")
+        data = _get_sites()
         filtered = [
             {"id": s["id"], "name": s["name"]}
             for s in data
