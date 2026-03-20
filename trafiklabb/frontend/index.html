@@ -114,7 +114,11 @@
       background: #16213e;
       border-radius: 6px;
       border-left: 4px solid #333;
+      cursor: pointer;
+      transition: background 0.15s;
     }
+
+    .departure:hover { background: #1e2d50; }
 
     .departure[data-mode="BUS"]   { border-left-color: #e94560; }
     .departure[data-mode="METRO"] { border-left-color: #4ecca3; }
@@ -316,6 +320,15 @@
       return `${h}:${m}`;
     }
 
+    // ---- MAP ----
+    function openMap(journeyId) {
+      window.open(
+        `/map.html?journeyId=${encodeURIComponent(journeyId)}`,
+        '_blank',
+        'noopener'
+      );
+    }
+
     // ---- RENDER DEPARTURES ----
     async function loadDepartures() {
       const container = document.getElementById('departures');
@@ -333,7 +346,8 @@
         container.innerHTML = `
           <div class="departure-list">
             ${departures.map(d => `
-              <div class="departure" data-mode="${d.transportMode}">
+              <div class="departure" data-mode="${d.transportMode}"
+                   ${d.journeyId ? `onclick="openMap('${d.journeyId}')"` : ''}>
                 <div class="line">${d.line}</div>
                 <div class="dest">${d.destination}</div>
                 <div class="time">

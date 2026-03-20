@@ -9,11 +9,24 @@ import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as targets from 'aws-cdk-lib/aws-route53-targets';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import * as path from 'path';
 
 export class DepartureBoardStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+
+    // --- Lambda Layer for gtfs-realtime-bindings ---
+    const gtfsLayer = new lambda.LayerVersion(this, 'GtfsRealtimeLayer', {
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../backend/layer')),
+      compatibleRuntimes: [lambda.Runtime.PYTHON_3_12],
+      description: 'gtfs-realtime-bindings protobuf library',
+    });
+
+    // --- Trafiklab API Key ---
+    const trafiklabSecret = secretsmanager.Secret.fromSecretNameV2(
+      this, 'TrafiklabApiKey', '/trafiklabb/trafiklab-api-key'
+    );
 
     // --- Lambda Functions ---
     const sitesFunction = new lambda.Function(this, 'SitesFunction', {
@@ -30,6 +43,18 @@ export class DepartureBoardStack extends cdk.Stack {
       code: lambda.Code.fromAsset(path.join(__dirname, '../../backend')),
       timeout: cdk.Duration.seconds(10),
       memorySize: 128,
+    });
+
+    const vehicleFunction = new lambda.Function(this, 'VehicleFunction', {
+      runtime: lambda.Runtime.PYTHON_3_12,
+      handler: 'handler.get_vehicle_position',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../backend')),
+      timeout: cdk.Duration.seconds(10),
+      memorySize: 256,
+      layers: [gtfsLayer],
+      environment: {
+        TRAFIKLAB_API_KEY: trafiklabSecret.secretValue.unsafeUnwrap(),
+      },
     });
 
     // --- API Gateway ---
@@ -51,6 +76,10 @@ export class DepartureBoardStack extends cdk.Stack {
     const siteIdResource = sitesResource.addResource('{siteId}');
     const departuresResource = siteIdResource.addResource('departures');
     departuresResource.addMethod('GET', new apigateway.LambdaIntegration(departuresFunction));
+
+    // GET /api/vehicle
+    const vehicleResource = apiResource.addResource('vehicle');
+    vehicleResource.addMethod('GET', new apigateway.LambdaIntegration(vehicleFunction));
 
     // --- Custom Domain ---
     const domainName = 'departures.engstrom.cloud';

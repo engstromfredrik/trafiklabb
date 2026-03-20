@@ -12,3 +12,6 @@ infra/cdk-outputs.json
 *.js
 *.d.ts
 !jest.config.js
+
+# Lambda layer (built by deploy.sh)
+backend/layer/

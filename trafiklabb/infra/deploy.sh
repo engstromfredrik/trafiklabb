@@ -6,7 +6,13 @@ cd "$SCRIPT_DIR"
 
 echo "=== Stockholm Departure Board - CDK Deploy ==="
 
-# Step 1: Bootstrap CDK (only needed once per account/region)
+# Step 1: Build Lambda layer for gtfs-realtime-bindings
+echo ">> Building Lambda layer..."
+LAYER_DIR="$SCRIPT_DIR/../backend/layer/python"
+mkdir -p "$LAYER_DIR"
+pip install gtfs-realtime-bindings -t "$LAYER_DIR" --quiet
+
+# Step 2: Bootstrap CDK (only needed once per account/region)
 echo ">> Bootstrapping CDK (if needed)..."
 npx cdk bootstrap 2>/dev/null || true
 
@@ -28,9 +34,11 @@ TEMP_DIR=$(mktemp -d)
 
 # Inject the APP_CONFIG before the closing </head> tag (portable across macOS and Linux)
 sed "s|</head>|<script>window.APP_CONFIG = { apiBase: '${API_URL%/}' };</script></head>|" "$FRONTEND_DIR/index.html" > "$TEMP_DIR/index.html"
+sed "s|</head>|<script>window.APP_CONFIG = { apiBase: '${API_URL%/}' };</script></head>|" "$FRONTEND_DIR/map.html" > "$TEMP_DIR/map.html"
 
 # Upload the modified frontend to S3
 aws s3 cp "$TEMP_DIR/index.html" "s3://$BUCKET_NAME/index.html" --content-type "text/html"
+aws s3 cp "$TEMP_DIR/map.html" "s3://$BUCKET_NAME/map.html" --content-type "text/html"
 
 # Invalidate CloudFront cache
 DIST_ID=$(aws cloudformation describe-stacks --stack-name DepartureBoardStack \
