@@ -1,5 +1,6 @@
 """Lambda handlers for Stockholm Departure Board."""
 
+import gzip
 import json
 import os
 import time
@@ -36,7 +37,10 @@ def _fetch_bytes(url):
         'Accept-Encoding': 'gzip',
     })
     with urllib.request.urlopen(req, timeout=10) as resp:
-        return resp.read()
+        data = resp.read()
+        if resp.info().get('Content-Encoding') == 'gzip':
+            data = gzip.decompress(data)
+        return data
 
 
 def _get_sites():
